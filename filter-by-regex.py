@@ -21,7 +21,14 @@ with open('pro-who-tweets.csv') as file:
 # -- Preprocessing: -- We don't care about the other data in our .csv. We want to only get the tweet text data in 'content' column.
 # -- Suggested approach: -- create a list variable and save the 'content' column of the pro-who-tweets.csv file as your list. Print the length of the list. See here for more: https://www.geeksforgeeks.org/python-read-csv-columns-into-list/
 
+data = pd.read_csv('pro-who-tweets.csv')
+ 
+# converting column data to list
+fc = data['content'].tolist()
 
+ 
+# printing list data
+print('content:', fc)
 
 
 
@@ -30,7 +37,8 @@ with open('pro-who-tweets.csv') as file:
 # -- First filter: -- Remove duplicates. 
 # -- Suggested approach: -- using your list, convert the list into a dictionary, which will automatically remove duplicates. Then convert your dictionary back into a list. Print the length of the list. https://www.w3schools.com/python/python_howto_remove_duplicates.asp
 
-
+fc = list(dict.fromkeys(fc))
+print("length of list:", len(fc))
 
 
 
