@@ -1,6 +1,6 @@
 # Initiated by Kelsey Kraus
 #
-# Contributors: <UPDATE ME!> 
+# Contributors: <Pamela Casipe, Chris Zepeda, Brianna Garcia> 
 #
 # Description: <UPDATE ME!> This file currently contains the instructions for replicating the data cleaning method implemented by CTK 2016.
 
@@ -20,7 +20,15 @@ with open('pro-who-tweets.csv') as file:
 
 # -- Preprocessing: -- We don't care about the other data in our .csv. We want to only get the tweet text data in 'content' column.
 # -- Suggested approach: -- create a list variable and save the 'content' column of the pro-who-tweets.csv file as your list. Print the length of the list. See here for more: https://www.geeksforgeeks.org/python-read-csv-columns-into-list/
+from pandas import *
+data = read_csv('pro-who-tweets.csv')
+ 
+# converting column data to list
+fc = data['content'].tolist()
 
+ 
+# printing list data
+print('content:', fc)
 
 
 
@@ -29,44 +37,71 @@ with open('pro-who-tweets.csv') as file:
 
 # -- First filter: -- Remove duplicates. 
 # -- Suggested approach: -- using your list, convert the list into a dictionary, which will automatically remove duplicates. Then convert your dictionary back into a list. Print the length of the list. https://www.w3schools.com/python/python_howto_remove_duplicates.asp
-
-
-
+print()
+duplicate_free = fc
+duplicate_free = dict.fromkeys(duplicate_free)
+duplicate_free = list(duplicate_free)
+print("The length of the data list:", len(duplicate_free))
 
 
 # -- Second filter: -- Remove tweets where the last non-whitespace character before the word 'who' is not a letter or a comma. See Lecture 3 slides for more explanation of this!
 # -- Suggested approach: -- Use the list you created as a result of the previous filter. Save the 10 possible pronouns in a list. Create a loop to run through each entry in your list. Use a conditional statement to construct a regular expression match, and save the list elements matching your condition. Print the length of the list.
 
+#for x in duplicate_dictionary
 
+#[,|a-z|A-Z] [who|WHO].+ <-- regex
 
+print()
+lc_who = []
+for tw_eet in duplicate_free:
+  matched = re.findall("[,|a-z]\swho", tw_eet)
+  if len(matched) != 0:
+    lc_who.append(tw_eet)
+print("The length of the tweet list with only commas and letters before 'who':", len(lc_who))
 
 
 # -- Third filter: -- Remove the pattern 'of PRO who'
 # -- Suggested approach: -- Create another loop, and another conditional statement using a regular expression from the list you got from the previous filter. This time, save only those that DO NOT match the conditional statement. Print the length of the list.
 
-
-
-
+proList = ['he', 'she', 'it', 'him', 'her', 'they', 'them', 'we', 'us', 'you']
+print()
+for pro in proList:
+  for tweet in lc_who:
+    matched = re.findall("of\s" + pro + "\swho", tweet)
+    if len(matched) != 0:
+      lc_who.remove(tweet)
+print("The length of the tweet list with no 'of PRO who':", len(lc_who))
 
 # -- Fourth filter: -- Remove tweets where the pronoun 'it' preceeds the word 'who' by 2-4 words
 # -- Suggested approach: -- Write a regular expression that picks out this pattern. Using the list you generated from the previous filter, use create a loop with a conditional statement that removes this pattern. Print the length of the list.
-
+print()
+for tweet in lc_who:
+    matched = re.findall(r"it(\s\w*){2,4}\swho", tweet)
+    if len(matched) != 0:
+      lc_who.remove(tweet)
+print("The length of the tweet list with no 'it' 2-4 words 'who':", len(lc_who))
 
 
 
 
 # -- Fifth filter: -- Remove tweets where 'PRO who' is preceded by the verbs 'ask', 'tell', 'wonder', 'inform', and 'show'.
 # -- Suggested approach: --  Save the verbs above into a list. Create a loop that iterates through your pronoun list from above, and removes examples that contain the pattern '[element-from-verb-list] [element-from-PRO-list]'. Print the length of the list.
-
-
-
-
 # output your list as a .csv or .tsv file.
 
 
+verbs = ["ask", "tell", "wonder", "inform", "show"]
+print()
+for verb in verbs:
+  for pro in proList:
+    for tweet in lc_who:
+      matched = re.findall(verb + "\s" + pro + "\swho", tweet)
+      if len(matched) != 0:
+        lc_who.remove(tweet)
+print("The length of the tweet list with no verb + 'PRO who':", len(lc_who))
 
 
-
+lc_who_pandas = pandas.DataFrame(lc_who)
+lc_who_pandas.to_csv('lc_who-file.csv')
 
 # === Part 2: Uniqueness ===
 
@@ -76,18 +111,29 @@ with open('pro-who-tweets.csv') as file:
 tweetList = ['this is a quote: he who shall not be named', 'who among us really', 'jeff is wondering who sings', 'he who shall not be named again', 'but who among us is perfect']
 
 # This evaluates each tweet in TweetList for whether it contains the specified regex search, and whether that regex pattern in a tweet matches exactly to any other tweet in the list. If it does, it is assigned a value True. If it doesn't, it's assigned a value False.
+print()
 trueFalseList = []
-for tweet in tweetList:
+falselist = 0
+for tweet in lc_who:
   whoPhrase = re.search("who \w+ \w+", tweet)
   if whoPhrase is None:
-      trueFalseList.append(False)
+    trueFalseList.append(False)
+    falselist = falselist + 1
+    print(falselist)
   else:
-      trueFalseList.append(any(whoPhrase.group(0) in t for t in tweetList))
-print(trueFalseList)
+    trueFalseList.append(any(whoPhrase.group(0) in t for t in lc_who)) 
+    
+print("This is the true/false list:", trueFalseList)
 
 # The following takes our two lists, tweetList and trueFalseList, and zips them together. It then creates a dataframe out of this list, that can then be converted to a .csv file
 
-annotatedTweetList = list(zip(tweetList, trueFalseList))
+annotatedTweetList = list(zip(lc_who, trueFalseList))
 tweetDataframe = pandas.DataFrame(annotatedTweetList)
 tweetDataframe.to_csv('literary-annotated-tweets.csv', header=["Tweets", "isLiterary"], index=False)
+
+
+
+
+
+
 
